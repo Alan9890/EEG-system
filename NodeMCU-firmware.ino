@@ -394,7 +394,7 @@ char checkUDP(void)
       WREG(CONFIG1, (HR<<7) + (DAISY_EN<<6) + (CLK_EN<<5) + DR);
       SPI.transfer(START); //Activate conversion
       Udp.beginPacket(remote, localUdpPort);
-      Udp.write('M');
+      Udp.write('N');
       Udp.endPacket();
     }  
 
@@ -407,7 +407,7 @@ char checkUDP(void)
       WREG(CONFIG1, (HR<<7) + (DAISY_EN<<6) + (CLK_EN<<5) + DR);
       SPI.transfer(START); //Activate conversion
       Udp.beginPacket(remote, localUdpPort);
-      Udp.write('M');
+      Udp.write('O');
       Udp.endPacket();
     }
     if (incomingPacket[0] == 'p')
@@ -419,7 +419,7 @@ char checkUDP(void)
       WREG(CONFIG1, (HR<<7) + (DAISY_EN<<6) + (CLK_EN<<5) + DR);
       SPI.transfer(START); //Activate conversion
       Udp.beginPacket(remote, localUdpPort);
-      Udp.write('M');
+      Udp.write('P');
       Udp.endPacket();
     }
   }

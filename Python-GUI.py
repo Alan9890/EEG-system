@@ -187,7 +187,7 @@ class Window(QtWidgets.QWidget):
 
         self.show()
         
-        self.file_object  = open('C:\Users\Matt\Desktop\EEG.txt', 'a')
+        self.file_object  = open('C:\EEG.txt', 'a')
 
 #callbacks:        
 ##########################################################

@@ -1,6 +1,6 @@
-# Experimental script that pulls data from c:\EEG.txt, and cleans it using a 3rd-level wavelet transform 
-# and soft-thresholding on the detail coefficients. The threshold is set to 15% of the respective maximums
-# for each coefficient array (one at each level).
+# Experimental script that pulls data from c:\EEG.txt, and removes noise using a 3rd-level wavelet transform 
+# and soft-thresholding on the detail coefficients before using the inverse transform. The threshold is set to 
+# 15% of the respective maxima for each coefficient array (one at each level).
 
 import matplotlib.pyplot as plt
 import pywt

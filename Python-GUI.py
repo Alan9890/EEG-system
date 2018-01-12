@@ -26,7 +26,7 @@ UDP server command reference:
     m - select 1000sps sampling rate
     n - select 2000sps sampling rate
     o - select 4000sps sampling rate
-    p - select 8000sps sampling rate 
+    p - select 8000sps sampling rate
 """
 
 class Window(QtWidgets.QWidget):
@@ -35,15 +35,15 @@ class Window(QtWidgets.QWidget):
         super(Window, self).__init__()
         self.init_ui()
 
-    def init_ui(self):        
+    def init_ui(self):
         self.s = None
-        
+
         self.Started = False
         self.Connected = False
         self.Recording = False
         self.notchStatus = False
         self.HPStatus = False
-        
+
         self.display_speed = 2000 #fps
         self.display_time = 4 #seconds
         self.fs_options = [500.0, 1000.0, 2000.00, 4000.00, 8000.00]
@@ -51,14 +51,14 @@ class Window(QtWidgets.QWidget):
         self.notch_f0 = 50  # Frequency to be removed from signal (Hz)
         self.timer2 = 0.0
         self.dataIn_dc = 0.0
-        
+
         self.peakfreq = 0 # initialize
-        
+
         self.gains = [1, 2, 4, 6, 12]
 
         self.selected_channel = 0
         self.PGA_Gain = self.gains[4]
-        
+
         self.Q = 5  # Quality factor
         self.w0 = self.notch_f0/(self.fs/2)  # Normalized Frequency
 
@@ -72,7 +72,7 @@ class Window(QtWidgets.QWidget):
         for i in range(self.display_length):
             self.index.append(0)
             self.data.append(0)
-        
+
         self.setGeometry(300, 100, 800, 500)
 
         self.b1 = QtWidgets.QPushButton('Connect')
@@ -85,12 +85,12 @@ class Window(QtWidgets.QWidget):
         if self.notchStatus is True:
             self.notch_status_label = QtWidgets.QLabel('Notch filter is ON')
         else:
-            self.notch_status_label = QtWidgets.QLabel('Notch filter is OFF')                
+            self.notch_status_label = QtWidgets.QLabel('Notch filter is OFF')
 
         if self.HPStatus is True:
             self.HP_status_label = QtWidgets.QLabel('HP filter is ON')
         else:
-            self.HP_status_label = QtWidgets.QLabel('HP filter is OFF')                
+            self.HP_status_label = QtWidgets.QLabel('HP filter is OFF')
 
         self.Sampling_rate_label = QtWidgets.QLabel('Select sampling rate:')
         self.Data_source_label = QtWidgets.QLabel('Select data source:')
@@ -103,17 +103,17 @@ class Window(QtWidgets.QWidget):
         self.Channel_select = QtWidgets.QComboBox()
 
         self.radio_electrodes = QtWidgets.QRadioButton("Electrodes")
-        self.radio_electrodes.setChecked(True) 
+        self.radio_electrodes.setChecked(True)
         self.radio_test_sig = QtWidgets.QRadioButton("Test signal")
         self.radio_shorted = QtWidgets.QRadioButton("Shorted")
-        
+
         pg.setConfigOption('background', 'w')
-        self.plotWidget1 = pg.PlotWidget()
-        self.plotWidget2 = pg.PlotWidget()        
+        self.timePlot = pg.PlotWidget()
+        self.fftPlot = pg.PlotWidget()
 
         self.PGA.addItems(["1x", "2x", "4x", "6x", "12x"])
         self.PGA.setCurrentIndex(4)
-         
+
         self.Sampling_rate.addItems(["500 Hz", "1000 Hz", "2000 Hz", "4000 Hz", "8000 Hz"])
         self.Sampling_rate.setCurrentIndex(1)
 
@@ -124,14 +124,14 @@ class Window(QtWidgets.QWidget):
         self.l_freq = QtWidgets.QLabel()
 
         v_box_plots = QtWidgets.QVBoxLayout()
-        v_box_plots.addWidget(self.plotWidget1)
-        v_box_plots.addWidget(self.plotWidget2)
+        v_box_plots.addWidget(self.timePlot)
+        v_box_plots.addWidget(self.fftPlot)
 
-        self.plotWidget1.plotItem.setLabel('left', text="Measured signal", units="V", unitPrefix=None)
-        self.plotWidget1.plotItem.setLabel('bottom', text="Time", units="seconds", unitPrefix=None)
-        self.plotWidget2.plotItem.setLabel('left', text="Frequency spectrum", units=None, unitPrefix=None)
-        self.plotWidget2.plotItem.setLabel('bottom', text="Frequency", units="Hz", unitPrefix=None)
-            
+        self.timePlot.plotItem.setLabel('left', text="Measured signal", units="V", unitPrefix=None)
+        self.timePlot.plotItem.setLabel('bottom', text="Time", units="seconds", unitPrefix=None)
+        self.fftPlot.plotItem.setLabel('left', text="Frequency spectrum", units=None, unitPrefix=None)
+        self.fftPlot.plotItem.setLabel('bottom', text="Frequency", units="Hz", unitPrefix=None)
+
         v_box_controls = QtWidgets.QVBoxLayout()
         v_box_controls.addWidget(self.b1)
         v_box_controls.addWidget(self.b2)
@@ -180,28 +180,28 @@ class Window(QtWidgets.QWidget):
         self.PGA.currentIndexChanged.connect(self.PGASelectionChange)
         self.Sampling_rate.currentIndexChanged.connect(self.SamplingRateSelectionChange)
         self.Channel_select.currentIndexChanged.connect(self.ChannelSelectionChange)
-        
+
         self.timer1 = pg.QtCore.QTimer()
         self.timer1.timeout.connect(self.update)
         self.timer1.start(1000/self.display_speed)
 
         self.show()
 
-        self.file_object  = open('.\EEG.txt', 'a')
+        self.file_object  = open('c:/users/matt/desktop/EEG.txt', 'w')
 
-#callbacks:        
+#callbacks:
 ##########################################################
     def ChannelSelectionChange(self, selection):
-        print("Channel selection changed")
         if self.Connected is True:
             try:
                 self.s
             except NameError:
-                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)            
+                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
             else:
+                print("Channel selection changed")
                 self.selected_channel = selection
                 print("Channel " + str(selection) + " selected.")
-        
+
     def PGASelectionChange(self, selection):
         print("PGA selection changed")
         server_address = ('192.168.4.1', 4210) #ESP8266 IP address
@@ -209,26 +209,14 @@ class Window(QtWidgets.QWidget):
             try:
                 self.s
             except NameError:
-                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)            
+                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
             else:
                 self.PGA_Gain = self.gains[selection]
                 print("Sending PGA command..."),
                 message = ["g", "h", "i", "j", "k"]
-                self.s.sendto(message[selection].encode(), server_address)                
-                print("sent..."), 
-                try:
-                    data, server = self.s.recvfrom(4096)
-                    data = data.decode()
-                except socket.timeout:
-                    pass
-                else:
-                    time.sleep(0.1)
-                    message_ack = ["G", "H", "I", "J", "K"]
-                    if data[0] == message_ack[selection]:
-                        print("Acknowledgement received")
-                    else:
-                        print(data[0])
-    
+                self.s.sendto(message[selection].encode(), server_address)
+                print("sent...")
+
     def SamplingRateSelectionChange(self, selection):
         print("Sampling Rate selection changed")
         server_address = ('192.168.4.1', 4210) #ESP8266 IP address
@@ -236,7 +224,7 @@ class Window(QtWidgets.QWidget):
             try:
                 self.s
             except NameError:
-                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)            
+                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
             else:
                 self.fs = self.fs_options[selection]
                 self.w0 = self.notch_f0/(self.fs/2)  # Normalized Frequency
@@ -249,48 +237,41 @@ class Window(QtWidgets.QWidget):
                 print("Sampling rate: " + str(self.fs) + "Hz")
                 print("Sending Sampling Rate command..."),
                 message = ["l", "m", "n", "o", "p"]
-                self.s.sendto(message[selection].encode(), server_address)                
-                print("sent..."), 
-                try:
-                    data, server = self.s.recvfrom(4096)
-                    data = data.decode()
-                except socket.timeout:
-                    pass
-                else:
-                    time.sleep(0.1)
-                    message_ack = ["L", "M", "N", "O", "P"]
-                    if data[0] == message_ack[selection]:
-                        print("Acknowledgement received")
-                    else:
-                        print(data[0])
-                        
+                self.s.sendto(message[selection].encode(), server_address)
+                print("sent...")
+
     def Connect_button_click(self):
         client_address = ('192.168.4.2', 4210) #ESP8266 IP address
         if self.Connected is False:
             # auto-find COM port:
             print("Connecting..."),
             self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.s.bind(client_address)
-            self.s.settimeout(0.01)
-            print(" connected.")
-            self.b1.setText("Disconnect")
-            self.Connected = True
+            try:
+                self.s.bind(client_address)
+            except:
+                QtWidgets.QMessageBox.about(self, "Connection error", "Failed to connect to EEG hardware. \nCheck wifi connection and try again.")
+                print("connection failed")
+            else:
+                self.s.settimeout(0.01)
+                print(" connected.")
+                self.b1.setText("Disconnect")
+                self.Connected = True
         else:
             self.Started = True
             self.Start_button_click()
             try:
                 self.s
             except NameError:
-                pass
+                QtWidgets.QMessageBox.about(self, "Disconnection error", "Failed to properly disconnect from EEG hardware. \nCheck source code.")
             else:
                 self.s.close()
-            self.plotWidget1.plotItem.clear()
+            self.timePlot.plotItem.clear()
             self.timer2 = 0
             for i in range(self.display_length):
                 self.data.append(0)
                 self.index.append(0)
             print("Disconnected")
-            self.b1.setText("Connect")    
+            self.b1.setText("Connect")
             self.Connected = False
 
     def Start_button_click(self):
@@ -301,7 +282,7 @@ class Window(QtWidgets.QWidget):
                 try:
                     self.s
                 except NameError:
-                    QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)            
+                    QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
                 else:
                     print("Sending start command...")
                     message = "a"
@@ -311,83 +292,56 @@ class Window(QtWidgets.QWidget):
                         print("Error sending data %s" % e)
                     else:
                         print("sent...")
-                        try:
-                            data, server = self.s.recvfrom(4096)
-                            data = data.decode()
-                        except socket.timeout:
-                            pass
-                        else:
-                            time.sleep(0.1)
-                            if data[0] == "A":
-                                print("Acknowledgement received")
-                                self.b2.setText("Pause") #change button text to "pause"
+                        self.b2.setText("Pause") #change button text to "pause"
             else:
                 try:
                     self.s
                 except NameError:
-                    QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)            
+                    QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
                 else:
                     print("Sending Stop command..."),
                     message = "b"
-                    self.s.sendto(message.encode(), server_address)                
-                    print("sent..."), 
-                    try:
-                        data, server = self.s.recvfrom(4096)
-                        data = data.decode()
-                    except socket.timeout:
-                        pass
-                    else:
-                        time.sleep(0.1)
-                        if data[0] == "B":
-                            print("Acknowledgement received")
-                self.b2.setText("Start")
-            
+                    self.s.sendto(message.encode(), server_address)
+                    print("sent..."),
+                    self.b2.setText("Start")
+
     def Reset_button_click(self):
         server_address = ('192.168.4.1', 4210) #ESP8266 IP address
         if self.Connected is True:
             try:
                 self.s
             except NameError:
-                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)            
+                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
             else:
                 self.Started = False
                 self.b2.setText("Start")
                 print("Sending reset command..."),
                 message = "c"
-                self.s.sendto(message.encode(), server_address)                
-                print("sent..."), 
-                try:
-                    data, server = self.s.recvfrom(4096)
-                    data = data.decode()
-                except socket.timeout:
-                    pass
-                else:
-                    time.sleep(0.1)
-                    if data[0] == "C":
-                        print("Acknowledgement received")
+                self.s.sendto(message.encode(), server_address)
+                print("sent..."),
         else:
-            QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Not connected to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)            
+            QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Not connected to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
 
     def Record_button_click(self):
         self.Recording = not self.Recording
         if not self.Recording:
             self.b4.setText("Record")
         else:
-            self.b4.setText("Stop recording")    
+            self.b4.setText("Stop recording")
 
     def Notch_button_click(self):
         self.notchStatus = not self.notchStatus
         if self.notchStatus is True:
             self.notch_status_label.setText("Notch filter is ON")
         else:
-            self.notch_status_label.setText("Notch filter is OFF")        
+            self.notch_status_label.setText("Notch filter is OFF")
 
     def HP_button_click(self):
         self.HPStatus = not self.HPStatus
         if self.HPStatus is True:
             self.HP_status_label.setText("HP filter is ON")
         else:
-            self.HP_status_label.setText("HP filter is OFF")        
+            self.HP_status_label.setText("HP filter is OFF")
 
     def radio_click_electrodes(self):
         print("electrodes selected as signal source")
@@ -396,21 +350,12 @@ class Window(QtWidgets.QWidget):
             try:
                 self.s
             except NameError:
-                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)            
+                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
             else:
                 print("Sending Source command..."),
                 message = "d"
-                self.s.sendto(message.encode(), server_address)                
-                print("sent..."), 
-                try:
-                    data, server = self.s.recvfrom(4096)
-                    data = data.decode()
-                except socket.timeout:
-                    pass
-                else:
-                    time.sleep(0.1)
-                    if data[0] == "D":
-                        print("Acknowledgement received")
+                self.s.sendto(message.encode(), server_address)
+                print("sent..."),
 
     def radio_click_test_sig(self):
         print("Test signal selected as signal source")
@@ -419,21 +364,12 @@ class Window(QtWidgets.QWidget):
             try:
                 self.s
             except NameError:
-                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)            
+                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
             else:
                 print("Sending Source command..."),
                 message = "e"
-                self.s.sendto(message.encode(), server_address)                
-                print("sent..."), 
-                try:
-                    data, server = self.s.recvfrom(4096)
-                    data = data.decode()
-                except socket.timeout:
-                    pass
-                else:
-                    time.sleep(0.1)
-                    if data[0] == "E":
-                        print("Acknowledgement received")
+                self.s.sendto(message.encode(), server_address)
+                print("sent..."),
 
     def radio_click_shorted(self):
         print("internal short selected as signal source")
@@ -442,22 +378,13 @@ class Window(QtWidgets.QWidget):
             try:
                 self.s
             except NameError:
-                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)            
+                QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
             else:
                 print("Sending Source command..."),
                 message = "f"
-                self.s.sendto(message.encode(), server_address)                
-                print("sent..."), 
-                try:
-                    data, server = self.s.recvfrom(4096)
-                    data = data.decode()
-                except socket.timeout:
-                    pass
-                else:
-                    time.sleep(0.1)
-                    if data[0] == "F":
-                        print("Acknowledgement received")
-                    
+                self.s.sendto(message.encode(), server_address)
+                print("sent..."),
+
     def codes2volts(self, CH):
         if CH <= 0x7FFFFF:
           return float(CH)/0x7FFFFF*2.400;
@@ -483,60 +410,60 @@ class Window(QtWidgets.QWidget):
                         if status[:4] == "1100": #basic error checking
                             dataIn = (int("0b" + recvd[24*(self.selected_channel+1):24*(self.selected_channel+2)], 2)) #read 24-bit datapoints
                             dataInFloat = self.codes2volts(dataIn)/self.PGA_Gain #process bytes
-                            
+
                             if self.HPStatus is True:
                                 self.dataIn_dc = self.dataIn_dc*0.995 + dataInFloat*0.005
                                 dataInFloat = dataInFloat - self.dataIn_dc
-                            
+
                             self.timer2 = self.timer2 + 1/self.fs  # measure
                             self.index.append(self.timer2)         # Approximate time index
                             self.data.append(dataInFloat)          # measured in volts
-                            
+
                             if self.Recording is True:
                                 self.file_object.write(str(self.timer2) + '\t' + str(dataInFloat*1000000) + '\n')
                         else:
                             print("bad packet!")
                         recvd = recvd[216:]  #discard from recvd string
-                    
+
                     if self.notchStatus is True:
                         self.data_filtered = signal.lfilter(self.b, self.a, self.data) #50Hz notch filter
                     else:
                         self.data_filtered = self.data # unfiltered
-                
-                self.plotWidget1.plotItem.clear()
-                self.plotWidget1.plotItem.plot(self.index, self.data_filtered, pen=pg.mkPen('k', width=1))
-    #            self.plotWidget1.plotItem.setRange(xRange = (self.timer2-self.display_time*0.8, max(self.index)), yRange = (-0.00015, 0.00015))
-                self.plotWidget1.plotItem.setRange(xRange = (self.timer2-self.display_time*0.8, max(self.index)))
+
+                self.timePlot.plotItem.clear()
+                self.timePlot.plotItem.plot(self.index, self.data_filtered, pen=pg.mkPen('k', width=1))
+    #            self.timePlot.plotItem.setRange(xRange = (self.timer2-self.display_time*0.8, max(self.index)), yRange = (-0.00015, 0.00015))
+                self.timePlot.plotItem.setRange(xRange = (self.timer2-self.display_time*0.8, max(self.index)))
 
                 fft = np.absolute(np.fft.fft(self.data_filtered))
                 self.fft_index = np.linspace(0 , self.fs, num = len(fft))
 
-                self.plotWidget2.plotItem.clear()
-                self.plotWidget2.plotItem.plot(self.fft_index, fft, pen=pg.mkPen('k', width=1))
-                self.plotWidget2.plotItem.setRange(xRange = (0, self.fs/2))
-    #            self.plotWidget2.plotItem.setRange(xRange = (0, self.fs/2), yRange = (0, 0.01))
-    #            self.plotWidget2.plotItem.setRange(xRange = (00, 40), yRange = (0, 0.01))
-                            
+                self.fftPlot.plotItem.clear()
+                self.fftPlot.plotItem.plot(self.fft_index, fft, pen=pg.mkPen('k', width=1))
+                self.fftPlot.plotItem.setRange(xRange = (0, self.fs/2))
+    #            self.fftPlot.plotItem.setRange(xRange = (0, self.fs/2), yRange = (0, 0.01))
+    #            self.fftPlot.plotItem.setRange(xRange = (00, 40), yRange = (0, 0.01))
+
     #            display peak frequency in bottom corner:
     #            convert fft data from numpy float64 to float:
                 fft_float = []
                 for i in range((len(fft)-1) // 2):
                     fft_float.append(np.asscalar(fft[i]))
-                    
+
     #            determine peak for label:
                 self.peakfreq = self.fft_index[fft_float.index(max(fft_float))]
                 self.peakfreq_label.setText('Peak freq: ' + str(round(self.peakfreq, 1)) + ' Hz')
-                            
+
     def closeEvent(self, event):
 
         #stop update timer
         self.timer1.stop()
-        
+
         #send tignal to ADS1298 to stop updating
         self.Started = True
         self.Start_button_click()
-        
-        #if open, close file object 
+
+        #if open, close file object
         try:
             self.file_object
         except NameError:
@@ -551,14 +478,14 @@ class Window(QtWidgets.QWidget):
             print("Fail to disconnect")
         else:
             self.s.close()
-            
+
         event.accept()
 
 
 if __name__ == "__main__":
     app = 0
-    app = QtWidgets.QApplication.instance()    
+    app = QtWidgets.QApplication.instance()
     if app is None:
         app = QtWidgets.QApplication(sys.argv)
-    a_window = Window()        
+    a_window = Window()
     app.exec_()

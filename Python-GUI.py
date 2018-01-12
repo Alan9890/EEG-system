@@ -186,8 +186,8 @@ class Window(QtWidgets.QWidget):
         self.timer1.start(1000/self.display_speed)
 
         self.show()
-        
-        self.file_object  = open('C:\EEG.txt', 'a')
+
+        self.file_object  = open('.\EEG.txt', 'a')
 
 #callbacks:        
 ##########################################################
@@ -214,10 +214,11 @@ class Window(QtWidgets.QWidget):
                 self.PGA_Gain = self.gains[selection]
                 print("Sending PGA command..."),
                 message = ["g", "h", "i", "j", "k"]
-                self.s.sendto(message[selection], server_address)                
+                self.s.sendto(message[selection].encode(), server_address)                
                 print("sent..."), 
                 try:
                     data, server = self.s.recvfrom(4096)
+                    data = data.decode()
                 except socket.timeout:
                     pass
                 else:
@@ -248,10 +249,11 @@ class Window(QtWidgets.QWidget):
                 print("Sampling rate: " + str(self.fs) + "Hz")
                 print("Sending Sampling Rate command..."),
                 message = ["l", "m", "n", "o", "p"]
-                self.s.sendto(message[selection], server_address)                
+                self.s.sendto(message[selection].encode(), server_address)                
                 print("sent..."), 
                 try:
                     data, server = self.s.recvfrom(4096)
+                    data = data.decode()
                 except socket.timeout:
                     pass
                 else:
@@ -301,19 +303,24 @@ class Window(QtWidgets.QWidget):
                 except NameError:
                     QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Error connecting to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)            
                 else:
-                    print("Sending start command..."),
+                    print("Sending start command...")
                     message = "a"
-                    self.s.sendto(message, server_address)                
-                    print("sent..."), 
                     try:
-                        data, server = self.s.recvfrom(4096)
-                    except socket.timeout:
-                        pass
+                        self.s.sendto(message.encode(), server_address)
+                    except Exception as e:
+                        print("Error sending data %s" % e)
                     else:
-                        time.sleep(0.1)
-                        if data[0] == "A":
-                            print("Acknowledgement received")
-                            self.b2.setText("Pause") #change button text to "pause"
+                        print("sent...")
+                        try:
+                            data, server = self.s.recvfrom(4096)
+                            data = data.decode()
+                        except socket.timeout:
+                            pass
+                        else:
+                            time.sleep(0.1)
+                            if data[0] == "A":
+                                print("Acknowledgement received")
+                                self.b2.setText("Pause") #change button text to "pause"
             else:
                 try:
                     self.s
@@ -322,10 +329,11 @@ class Window(QtWidgets.QWidget):
                 else:
                     print("Sending Stop command..."),
                     message = "b"
-                    self.s.sendto(message, server_address)                
+                    self.s.sendto(message.encode(), server_address)                
                     print("sent..."), 
                     try:
                         data, server = self.s.recvfrom(4096)
+                        data = data.decode()
                     except socket.timeout:
                         pass
                     else:
@@ -346,10 +354,11 @@ class Window(QtWidgets.QWidget):
                 self.b2.setText("Start")
                 print("Sending reset command..."),
                 message = "c"
-                self.s.sendto(message, server_address)                
+                self.s.sendto(message.encode(), server_address)                
                 print("sent..."), 
                 try:
                     data, server = self.s.recvfrom(4096)
+                    data = data.decode()
                 except socket.timeout:
                     pass
                 else:
@@ -391,10 +400,11 @@ class Window(QtWidgets.QWidget):
             else:
                 print("Sending Source command..."),
                 message = "d"
-                self.s.sendto(message, server_address)                
+                self.s.sendto(message.encode(), server_address)                
                 print("sent..."), 
                 try:
                     data, server = self.s.recvfrom(4096)
+                    data = data.decode()
                 except socket.timeout:
                     pass
                 else:
@@ -413,10 +423,11 @@ class Window(QtWidgets.QWidget):
             else:
                 print("Sending Source command..."),
                 message = "e"
-                self.s.sendto(message, server_address)                
+                self.s.sendto(message.encode(), server_address)                
                 print("sent..."), 
                 try:
                     data, server = self.s.recvfrom(4096)
+                    data = data.decode()
                 except socket.timeout:
                     pass
                 else:
@@ -435,10 +446,11 @@ class Window(QtWidgets.QWidget):
             else:
                 print("Sending Source command..."),
                 message = "f"
-                self.s.sendto(message, server_address)                
+                self.s.sendto(message.encode(), server_address)                
                 print("sent..."), 
                 try:
                     data, server = self.s.recvfrom(4096)
+                    data = data.decode()
                 except socket.timeout:
                     pass
                 else:
@@ -460,41 +472,45 @@ class Window(QtWidgets.QWidget):
             except socket.timeout:
                 pass
             else:
-                recvd = bin(int(binascii.hexlify(recvd),16))
-                recvd = recvd[2:] #remove "0b" from the beginning
-                while len(recvd) >= 120: #while recvd is at least 24 characters (three bytes, one reading)
-                    status = recvd[:24] # status bytes - use to detect errors and checking lead off/GPIO status
-                    if status[:4] == "1100": #basic error checking
-                        dataIn = (int("0b" + recvd[24*(self.selected_channel+1):24*(self.selected_channel+2)], 2)) #read 24-bit datapoints
-                        dataInFloat = self.codes2volts(dataIn)/self.PGA_Gain #process bytes
-                        
-                        if self.HPStatus is True:
-                            self.dataIn_dc = self.dataIn_dc*0.995 + dataInFloat*0.005
-                            dataInFloat = dataInFloat - self.dataIn_dc
-                        
-                        self.timer2 = self.timer2 + 1/self.fs  # measure
-                        self.index.append(self.timer2)         # Approximate time index
-                        self.data.append(dataInFloat)          # measured in volts
-                        
-                        if self.Recording is True:
-                            self.file_object.write(str(self.timer2) + '\t' + str(dataInFloat*1000000) + '\n')
-                    else:
-                        print("bad packet!")
-                    recvd = recvd[216:]  #discard from recvd string
-                
-                if self.notchStatus is True:
-                    self.data_filtered = signal.lfilter(self.b, self.a, self.data) #50Hz notch filter
+                try:
+                    recvd = bin(int(binascii.hexlify(recvd),16)) #doesn't need to be decoded from a byte string for this step
+                    recvd = recvd[2:] #remove "0b" from the beginning
+                except Exception as e:
+                    print(e);
                 else:
-                    self.data_filtered = self.data # unfiltered
+                    while len(recvd) >= 120: #while recvd is at least 24 characters (three bytes, one reading)
+                        status = recvd[:24] # status bytes - use to detect errors and checking lead off/GPIO status
+                        if status[:4] == "1100": #basic error checking
+                            dataIn = (int("0b" + recvd[24*(self.selected_channel+1):24*(self.selected_channel+2)], 2)) #read 24-bit datapoints
+                            dataInFloat = self.codes2volts(dataIn)/self.PGA_Gain #process bytes
+                            
+                            if self.HPStatus is True:
+                                self.dataIn_dc = self.dataIn_dc*0.995 + dataInFloat*0.005
+                                dataInFloat = dataInFloat - self.dataIn_dc
+                            
+                            self.timer2 = self.timer2 + 1/self.fs  # measure
+                            self.index.append(self.timer2)         # Approximate time index
+                            self.data.append(dataInFloat)          # measured in volts
+                            
+                            if self.Recording is True:
+                                self.file_object.write(str(self.timer2) + '\t' + str(dataInFloat*1000000) + '\n')
+                        else:
+                            print("bad packet!")
+                        recvd = recvd[216:]  #discard from recvd string
+                    
+                    if self.notchStatus is True:
+                        self.data_filtered = signal.lfilter(self.b, self.a, self.data) #50Hz notch filter
+                    else:
+                        self.data_filtered = self.data # unfiltered
                 
                 self.plotWidget1.plotItem.clear()
                 self.plotWidget1.plotItem.plot(self.index, self.data_filtered, pen=pg.mkPen('k', width=1))
     #            self.plotWidget1.plotItem.setRange(xRange = (self.timer2-self.display_time*0.8, max(self.index)), yRange = (-0.00015, 0.00015))
                 self.plotWidget1.plotItem.setRange(xRange = (self.timer2-self.display_time*0.8, max(self.index)))
-                
+
                 fft = np.absolute(np.fft.fft(self.data_filtered))
                 self.fft_index = np.linspace(0 , self.fs, num = len(fft))
-                
+
                 self.plotWidget2.plotItem.clear()
                 self.plotWidget2.plotItem.plot(self.fft_index, fft, pen=pg.mkPen('k', width=1))
                 self.plotWidget2.plotItem.setRange(xRange = (0, self.fs/2))
@@ -504,7 +520,7 @@ class Window(QtWidgets.QWidget):
     #            display peak frequency in bottom corner:
     #            convert fft data from numpy float64 to float:
                 fft_float = []
-                for i in range((len(fft)-1)/2):
+                for i in range((len(fft)-1) // 2):
                     fft_float.append(np.asscalar(fft[i]))
                     
     #            determine peak for label:
@@ -546,5 +562,3 @@ if __name__ == "__main__":
         app = QtWidgets.QApplication(sys.argv)
     a_window = Window()        
     app.exec_()
-    
-    

@@ -1,5 +1,20 @@
 # EEG-system
 A combination of a python GUI, NodeMCU/arduino code and a PCB design to create a system for acquisition of biological signals
 
+At this point, this project repository includes hardware schematics and circuit board layouts (Eagle CAD files), as well as user interface GUI (written in Python 3.6) which can do the following:
+* Connect to a WiFi network and start data collection
+* Display real-time readings being collected by the hardware, as well as FFT (frequency spectrum) display.
+* Reset the device
+* Toggle the 50 Hz notch filter or high-pass filter on or off
+* Change the signal source to choose between the electrodes, the internally generated test signal, or internally shorting the inputs
+* Select a different sampling rate, input channel or amplifier gain
+* Display the maximum frequency of the signal in the current display window
 
-Project in progress. Stay tuned.
+Below is a demo of the system capturing alpha waves over my occipital lobe:
+
+![Example Gui](https://github.com/MProx/EEG-system/blob/master/EEG%20GUI.png "Example GUI")
+
+This is a project in progress - stay tuned. Future updates will include:
+* Ability to zoom the FFT plot to a frequency of interest
+* Display multiple channels at once
+* Improve high-speed data transfer behaviour

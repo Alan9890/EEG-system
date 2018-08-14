@@ -10,6 +10,11 @@ At this point, this project repository includes hardware schematics, circuit boa
 * Select a different sampling rate, input channel or amplifier gain
 * Display the maximum frequency of the signal in the current display window
 
+Below is a photo of the EEG-capturing hardware:
+
+![Hardware](https://github.com/MProx/EEG-system/blob/master/EEG_hardware.PNG "Hardware")
+
+
 Below is a demo of the system capturing alpha waves over my occipital lobe (red text added):
 
 ![Example Gui](https://github.com/MProx/EEG-system/blob/master/EEG%20GUI.png "Example GUI")

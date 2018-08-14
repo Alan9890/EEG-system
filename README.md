@@ -12,7 +12,7 @@ At this point, this project repository includes hardware schematics, circuit boa
 
 Below is a photo of the EEG-capturing hardware:
 
-![Hardware](https://github.com/MProx/EEG-system/blob/master/EEG_hardware.PNG "Hardware")
+![Hardware](https://github.com/MProx/EEG-system/blob/master/EEG%20hardware.PNG "Hardware")
 
 
 Below is a demo of the system capturing alpha waves over my occipital lobe (red text added):

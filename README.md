@@ -16,6 +16,7 @@ SSVEP-based brain-computer interfaces). The system includes up to 12x programmab
 This repository documents a combination of a python GUI, NodeMCU/arduino code and a PCB design to create a system for acquisition of biological signals. At this point, this project repo includes hardware schematics, circuit board layouts (Eagle CAD files) and firmware (C++), as well as user interface GUI (Python 3.6) which can do the following:
 * Connect to a WiFi network and start data collection
 * Display real-time readings being collected by the hardware, as well as FFT (frequency spectrum) display.
+* Record the time-domain data to a CSV file
 * Reset the device
 * Toggle the 50 Hz notch filter or high-pass filter on or off
 * Change the signal source to choose between the electrodes, the internally generated test signal, or internally shorting the inputs

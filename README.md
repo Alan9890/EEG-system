@@ -34,6 +34,6 @@ Below is a demo of the system capturing alpha waves over my occipital lobe (red 
 
 ## Areas of ongoing development:
 * The wifi transmission of data could do with improvement. It currently employs the UDP "send and forget" protocol, which includes no error checking. This was required to achieve throughput, but might result in interruption of signal during periods of poor signal reception. It might be better to move to bluetooth for transmission.
-* Ability to zoom the FFT plot to a frequency of interest
+* Ability to zoom the real-time or FFT plots to a resolution of interest (e.g if working with EMG then we want to see 500Hz - 1000Hz, but for EEG, usually 100Hz is plenty)
 * Display multiple channels at once
 

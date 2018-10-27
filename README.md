@@ -10,7 +10,7 @@ Features:
 * **Input referred noise < 5 uV peak-to-peak** (demonstrated to be suitable for EEG, including
 SSVEP-based brain-computer interfaces). The system includes up to 12x programmable gain.
 * **Battery-powered** for portability, to reduce risk of electric shock, and mitigate contamination from AC noise.
-* **Custom GUI written** in Python for device control, data capture, visualization, and analysis
+* **Custom GUI** written in Python for device control, data capture, visualization, and analysis
 * Capabilities include measuring heart (ECG), muscle (EMG) and brain (EEG) signals.
 
 This repository documents a combination of a python GUI, NodeMCU/arduino code and a PCB design to create a system for acquisition of biological signals. At this point, this project repo includes hardware schematics, circuit board layouts (Eagle CAD files) and firmware (C++), as well as user interface GUI (Python 3.6) which can do the following:

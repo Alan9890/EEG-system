@@ -6,7 +6,7 @@ This personal project came about as a way to merge two of my interests: physiolo
 
 ## The current state of the project:
 Features:
-* **Up to 8 channels with 24-bit resolution.** The ADS1298 chip is capable of a maximum of 32k samples/second for each channel, but this is limited by the microcontroller. Practically, a single channel can be broadcast over wifi at about 1000 samples per second. Higher rates can be achieved over a wired connection, or if upgrading the microcontroller.
+* **Up to 8 channels with 24-bit resolution.** The ADS1298 chip is capable of a maximum of sampling all eight channels at 32k samples/second, but the real limitation is the microcontroller. Practically, a single channel can be broadcast over wifi at about 1000 samples/second. Higher rates can be achieved over a wired connection, or if upgrading the microcontroller.
 * **Input referred noise < 5 uV peak-to-peak** (demonstrated to be suitable for EEG, including
 SSVEP-based brain-computer interfaces). The system includes up to 12x programmable gain.
 * **Battery-powered** for portability, to reduce risk of electric shock, and mitigate contamination from AC noise.

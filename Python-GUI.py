@@ -7,7 +7,7 @@ import time
 from scipy import signal
 import socket
 import binascii
-
+import datetime as dt
 
 """
 UDP server command reference:
@@ -187,8 +187,6 @@ class Window(QtWidgets.QWidget):
 
         self.show()
 
-        self.file_object  = open('./EEG.txt', 'w')
-
 #callbacks:
 ##########################################################
     def ChannelSelectionChange(self, selection):
@@ -328,6 +326,12 @@ class Window(QtWidgets.QWidget):
             QtWidgets.QMessageBox.question(self, 'Biosignals GUI message', "Not connected to device", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
 
     def Record_button_click(self):
+        try:
+            self.file_object
+        except AttributeError:
+            date = dt.datetime.now()
+            self.file_object  = open('./Biosignals_recording_' + date.strftime('%m-%d-%Y_%H-%M-%S') + '.csv', 'w+')
+
         self.Recording = not self.Recording
         if not self.Recording:
             self.b4.setText("Record")
@@ -412,9 +416,9 @@ class Window(QtWidgets.QWidget):
                 else:
                     while len(recvd) >= 120: #while recvd is at least 24 characters (three bytes, one reading)
                         status = recvd[:24] # status bytes - use to detect errors and checking lead off/GPIO status
-                        if status[:4] == "1100": #basic error checking
+                        if status[:4] == "1100": #basic error checking - all packets start with 1100
                             dataIn = (int("0b" + recvd[24*(self.selected_channel+1):24*(self.selected_channel+2)], 2)) #read 24-bit datapoints
-                            dataInFloat = self.codes2volts(dataIn)/self.PGA_Gain #process bytes
+                            dataInFloat = self.codes2volts(dataIn) #process bytes
 
                             if self.HPStatus is True:
                                 self.dataIn_dc = self.dataIn_dc*0.995 + dataInFloat*0.005
@@ -425,7 +429,7 @@ class Window(QtWidgets.QWidget):
                             self.data.append(dataInFloat)          # measured in volts
 
                             if self.Recording is True:
-                                self.file_object.write(str(self.timer2) + '\t' + str(dataInFloat*1000000) + '\n')
+                                self.file_object.write(str(self.timer2) + ', ' + str(dataInFloat*1000000) + '\n')
                         else:
                             print("bad packet!")
                         recvd = recvd[216:]  #discard from recvd string
